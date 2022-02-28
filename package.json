@@ -1,0 +1,15 @@
+{
+  "name": "myrxjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "tsc && node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "rxjs": "^7.5.4",
+    "typescript": "^4.5.5"
+  }
+}
