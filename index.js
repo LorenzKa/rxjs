@@ -77,6 +77,8 @@ window.onload = () => {
   // #region ------------------------------------------------------------------ register
   function registerClick(id, handler) {
     $(`#${id}`).on('click', ev => handler());
+    RxJsVisualizer.prepareCanvas(['A','B']);
+    RxJsVisualizer.startVisualize();
   }
 
   registerClick('btnMouseDistance', btnMouseDistance);
@@ -96,20 +98,54 @@ window.onload = () => {
 
 
   // #region ------------------------------------------------------------------ mouse distance
+  const clicks = Rx.fromEvent(document.getElementById("btnMouseDistanceFinish"), "click"); 
   function btnMouseDistance() {
-
+    var event = Rx.fromEvent(document, 'mousemove');
+    var result = event.pipe(
+      debounceTime(500),
+      map(e => ({ x: e.clientX, y: e.clientY })),
+      pairwise(),
+      map(pair => (Math.sqrt(Math.pow(pair[0].x - pair[1].x, 2) + Math.pow(pair[0].y - pair[1].y, 2))).toFixed(2)),
+      throttleTime(1000),
+      takeUntil(clicks)
+    )
+    result.subscribe(RxJsVisualizer.observerForLine(1, 'dist',true) );
   }
+
   // #endregion
 
   // #region ------------------------------------------------------------------ moving average
   function btnMovingAverage() {
-
+    const numbers = Rx.from([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const result = numbers.pipe(
+      scan((acc,valc) => {
+        acc.push(valc);
+        return acc.slice(-4);
+      }, []),
+      map(arr => arr.reduce((a,b) => a + b, 0) / arr.length))
+    result.subscribe(RxJsVisualizer.observerForLine(1, 'moving average',true) );
   }
   // #endregion
 
   // #region ------------------------------------------------------------------ multiple clicks
   function btnMultipleClicks() {
-
+    var event = Rx.fromEvent(document, 'click');
+    var result = event.pipe(
+      buffer(event.pipe(debounceTime(250))),
+      filter(x => x.length > 1),
+      map(x => {
+        if(x.length == 3){
+          return 'triple click';
+        }
+        if(x.length == 2){
+          return 'double click';
+        }
+        if(x.length > 3){
+          return x.length+"-times click";
+        }
+      })
+    )
+    result.subscribe(RxJsVisualizer.observerForLine(1, 'clicks',true) );
   }
   // #endregion
 
@@ -120,11 +156,11 @@ window.onload = () => {
       .pipe(
         take(5),
         map(x => x + 1),
-        share(),
         map(x => `${x} -> ${Math.random()}`),
+        share(),
       );
     clock.subscribe(x => console.log(`a: ${x}`));
-    setTimeout(() => clock.subscribe(x => console.log(`b: ${x}`)), 2500);
+    clock.subscribe(x => console.log(`b: ${x}`));
   }
   // #endregion
 
@@ -133,6 +169,7 @@ window.onload = () => {
   function btnWebSequentialList() {
     // https://jsonplaceholder.typicode.com/posts?userId=7 ==> postId 61-70
     // https://jsonplaceholder.typicode.com/comments?postId=61 ==> commentId 301-350
+    //invert a binary tree
   }
   // #endregion
 
